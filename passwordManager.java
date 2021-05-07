@@ -306,17 +306,43 @@ class passwordClass{
     public static String createSecurePassword(){
 
         //Ciataion I referenced this code while creating my password creater: https://mkyong.com/java/java-password-generator-example/ 
+        //https://mkyong.com/java/java-password-generator-example/
+        //https://crypto.stackexchange.com/questions/41436/is-deriving-the-iv-from-the-password-secure 
 
         final String CHAR_LOWERCASE = "abcdefghijklmnopqrstuvwxyz";
         final String CHAR_UPPERCASE = CHAR_LOWERCASE.toUpperCase();
         final String DIGIT = "0123456789";
         final String SPECIAL_SYMBOLS = "!@#&()–[{}]:;',?/*~$^+=<>";
 
-        //https://mkyong.com/java/java-password-generator-example/
-        //https://crypto.stackexchange.com/questions/41436/is-deriving-the-iv-from-the-password-secure 
-
-
-
+        //Using this to append characters for my password gen @ the end I will shuffle this to make it random
+        StringBuilder password = new StringBuilder(8);
+        
+        //String twoLowerCaseChars = generateRandom
 
     }
+
+    private static String getRandomCharacters(String inputString, int amountToSendBack){
+        try{
+            //Code sourced from https://howtodoinjava.com/java8/secure-random-number-generation/ 
+            SecureRandom secureRandomGen = SecureRandom.getInstance("SHA1PRNG","SUN");
+            
+            //StringBuilder returnStr = new StringBuilder(amountToSendBack);
+            String returnStr = new St; 
+
+            for (int i = 0; i < amountToSendBack; i++){
+                //get random int between 0 and the length of the strong 
+                int randomInteger = secureRandomGen.nextInt(inputString.length()-1);
+
+                returnStr = returnStr + inputString.substring(randomInteger);
+
+            }
+
+            
+
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
 }
