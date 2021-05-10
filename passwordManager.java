@@ -68,7 +68,6 @@ public class passwordManager
             TimeUnit.SECONDS.sleep(1);
             decryptionClass.setupAndDecrypt(iv, key); 
             System.out.println("masterFile successfully decrypted!");
-            */
 
             Scanner userSearch = new Scanner(System.in); 
             System.out.println("Enter Account Name to search for: ");
@@ -77,6 +76,9 @@ public class passwordManager
             System.out.println("Username and Password: " + returnList.toString());
 
             userSearch.close();
+
+            */
+            UserInterfaceClass.welcomeMessage();
             
 
 
@@ -87,6 +89,43 @@ public class passwordManager
 
         return ; 
         
+    }
+}
+class UserInterfaceClass{
+    public static void welcomeMessage() throws InterruptedException{
+        System.out.println("**************************************");
+        System.out.println("Welcome to my secure password manager!");
+        System.out.println("**************************************");
+        System.out.println("Detecting if you already have an encrypted masterFile...\n");
+
+        if(masterFileClass.checkIfMasterFileExists()){
+            System.out.println("MasterFile found!");
+            System.out.print("Enter your master password: ");
+            Scanner userinput = new Scanner(System.in);
+            String password = userinput.nextLine().toString();
+            byte[] key = passwordClass.getKEYFromPassword(password);
+            byte[] iv = passwordClass.getIVFromPassword(password);
+        }
+        else{
+            System.out.println("Creating your master password file...");
+            TimeUnit.SECONDS.sleep(1);
+            masterFileClass.createMasterFile();
+            System.out.println("Master password file created! Would you like to enter or generate a password?: ");
+            Boolean answeredCorrectly = false; 
+
+            while (answeredCorrectly != true){
+                System.out.println("(type \"g\" to generate password | type \"e\" to enter your own password)");
+                Scanner userPasswordChoice = new Scanner(System.in);
+                String generatePaswordChoice = userPasswordChoice.nextLine();
+                System.out.println(generatePaswordChoice.toString());
+                System.out.println(generatePaswordChoice.toString().equals("g"));
+                if (generatePaswordChoice.toString().equals("g")){
+                    String generatedPassword = passwordClass.createSecurePassword();
+                    System.out.println("your password is: " + generatedPassword);
+                    System.out.println("\n**Please write down / save this password! If you lose it you cannot recover your passwords!**\n");
+                }
+            }
+        }
     }
 }
 
