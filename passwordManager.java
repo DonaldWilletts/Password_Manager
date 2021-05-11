@@ -79,6 +79,7 @@ public class passwordManager
 
             */
             UserInterfaceClass.welcomeMessage();
+            UserInterfaceClass.decideToGetOrCreateMasterPassword();
             
 
 
@@ -92,47 +93,94 @@ public class passwordManager
     }
 }
 class UserInterfaceClass{
+    //Welcome message for my program
     public static void welcomeMessage() throws InterruptedException{
-        System.out.println("**************************************");
+        System.out.println("\n**************************************");
         System.out.println("Welcome to my secure password manager!");
         System.out.println("**************************************");
-        System.out.println("Detecting if you already have an encrypted masterFile...\n");
+        System.out.println("\nDetecting if you already have an encrypted masterFile...\n");
+    }
 
+    //deciding where to go next, does the masterFile already exist? or does it need to be created?
+    public static void decideToGetOrCreateMasterPassword(){
+        //masterFile exists! Lets send to a new function to create get the IV / Key
         if(masterFileClass.checkIfMasterFileExists()){
             System.out.println("MasterFile found!");
-            System.out.print("Enter your master password: ");
-            Scanner userinput = new Scanner(System.in);
-            String password = userinput.nextLine().toString();
-            byte[] key = passwordClass.getKEYFromPassword(password);
-            byte[] iv = passwordClass.getIVFromPassword(password);
+            UserInterfaceClass.getMasterPasswordFromUser();
         }
         else{
-            System.out.println("Creating your master password file...");
-            TimeUnit.SECONDS.sleep(1);
-            masterFileClass.createMasterFile();
-            System.out.println("Master password file created! Would you like to enter or generate a password?: ");
-            Boolean answeredCorrectly = false; 
-
-            while (answeredCorrectly != true){
-                System.out.println("(type \"g\" to generate password | type \"e\" to enter your own password)");
-                Scanner userPasswordChoice = new Scanner(System.in);
-                String generatePaswordChoice = userPasswordChoice.nextLine();
-                System.out.println(generatePaswordChoice.toString());
-                System.out.println(generatePaswordChoice.toString().equals("g"));
-                if (generatePaswordChoice.toString().equals("g")){
-                    String generatedPassword = passwordClass.createSecurePassword();
-                    System.out.println("your password is: " + generatedPassword);
-                    System.out.println("\n**Please write down / save this password! If you lose it you cannot recover your passwords!**\n");
-                }
-            }
+            UserInterfaceClass.createMasterFileAndCallPasswordCreater();
         }
     }
+
+    //Sending to passwordClass to get key and IV
+    public static void getMasterPasswordFromUser(){
+        System.out.print("Enter your master password: ");
+        Scanner userinput = new Scanner(System.in);
+        System.out.println(); //This is here to create \n (makes output to terminal prettier)
+        String password = userinput.nextLine().toString();
+        byte[] key = passwordClass.getKEYFromPassword(password);
+        byte[] iv = passwordClass.getIVFromPassword(password);
+    }
+
+    //Creating masterPasswordfile and generating/getting a password from the user. 
+    public static void createMasterFileAndCallPasswordCreater(){
+
+        //Creating masterFile here. 
+        System.out.println("Creating your master password file...\n");
+        //masterFileClass.createMasterFile();
+        System.out.println("Master password file created! Would you like to enter or generate a master password? ");
+
+        UserInterfaceClass.askUserToEnterOrGeneratePassword();
+    }
+    public static void askUserToEnterOrGeneratePassword(){
+        //create varible to end loop if user answers correctly. 
+        boolean answeredCorrectly = false; 
+
+        while (answeredCorrectly != true){
+            //Asking if user wants to enter their own or generate a password.
+            System.out.println("(type \"g\" to generate password | type \"e\" to enter your own password)");
+            System.out.print("Enter Answer here:");
+            Scanner userPasswordChoice = new Scanner(System.in);
+            String generatePaswordChoice = userPasswordChoice.nextLine();
+            //userPasswordChoice.close();
+            System.out.println();
+            
+            //User choose to generate password
+            if (generatePaswordChoice.toString().equals("g")){
+                String generatedPassword = passwordClass.createSecurePassword();
+                System.out.println("Generated password is: " + generatedPassword);
+                System.out.println("\n**Please write down / save this password! If you lose it you cannot recover your passwords!**\n");
+                //end loop
+                answeredCorrectly = true;
+            }
+            //User choose to use their own input for a password.
+            else if (generatePaswordChoice.toString().equals("e")){
+                System.out.print("Enter your own password here: ");
+                Scanner userInputPassword = new Scanner(System.in);
+                String userCreatedInputPassword = userInputPassword.nextLine(); //NEED TO CALL TOSTRING
+                System.out.println();
+                //userInputPassword.close();
+                System.out.println("Your entered password is " + userCreatedInputPassword);
+                System.out.println("\n**Please write down / save this password! If you lose it you cannot recover your passwords!**\n");
+
+                //end loop
+                answeredCorrectly = true; 
+            }
+            else{
+                System.out.println("Invaild input. Try again.");
+            }
+        
+        }
+    }
+    
 }
 
 class masterFileClass{
 
     public static File getMasterFile(){
-        File masterFile = new File("C:\\Users\\donwi\\Documents\\GitHub\\Password_Manager\\masterFile.txt");
+        //File masterFile = new File("C:\\Users\\donwi\\Documents\\GitHub\\Password_Manager\\masterFile.txt");
+        File masterFile = new File("masterFile.txt");
         return (masterFile);
     }
 
@@ -140,7 +188,8 @@ class masterFileClass{
     public static boolean checkIfMasterFileExists(){
      
         //change file location on your localmachine
-        File masterFile = new File("C:\\Users\\donwi\\Documents\\GitHub\\Password_Manager\\masterFile.txt");
+        //File masterFile = new File("C:\\Users\\donwi\\Documents\\GitHub\\Password_Manager\\masterFile.txt");
+        File masterFile = new File("masterFile.txt");
 
         boolean exists = masterFile.exists();
             
@@ -150,7 +199,8 @@ class masterFileClass{
 
     //if masterFile is not in directory, create it
     public static void createMasterFile(){
-        File masterFile = new File("C:\\Users\\donwi\\Documents\\GitHub\\Password_Manager\\masterFile.txt");
+        //File masterFile = new File("C:\\Users\\donwi\\Documents\\GitHub\\Password_Manager\\masterFile.txt");
+        File masterFile = new File("masterFile.txt");
         try{
             masterFile.createNewFile();
         }
@@ -260,7 +310,8 @@ class encrytionClass{
     {
         try{
             
-            File masterFile = new File("C:\\Users\\donwi\\Documents\\GitHub\\Password_Manager\\masterFile.txt");
+            //File masterFile = new File("C:\\Users\\donwi\\Documents\\GitHub\\Password_Manager\\masterFile.txt");
+            File masterFile = new File("masterFile.txt");
             Path path = masterFile.toPath();
 
             byte[] masterFileRawContent = Files.readAllBytes(path);
@@ -320,7 +371,8 @@ class decryptionClass{
         //citation https://www.novixys.com/blog/java-aes-example/ || I am copying my code from HW3 here. This is the website I cited there as well. 
         try{
             
-            File masterFile = new File("C:\\Users\\donwi\\Documents\\GitHub\\Password_Manager\\masterFile.txt");
+            //File masterFile = new File("C:\\Users\\donwi\\Documents\\GitHub\\Password_Manager\\masterFile.txt");
+            File masterFile = new File("masterFile.txt");
             Path path = masterFile.toPath();
 
             byte[] masterFileRawContent = Files.readAllBytes(path);
