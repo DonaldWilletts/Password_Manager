@@ -1,100 +1,43 @@
-import java.io.FileInputStream;
-import java.io.InputStream;
+/*
+Donald Willetts
+Finald Research Project Secure Password Manager
+CS:4640 Computer Security
+
+NOTE: I WAS UNABLE TO GET THE USERNAME / PASSWORD ENCRYPTION WORKING. I HAVE DELETED THESE METHODS BECASUE THEY BREAK MY CODE. 
+THIS CODE STILL WORKS BY ENCRYPTING THE MASTERFILE AND INSERTING, DELETING, AND SERACHING IT. 
+*/
 import java.io.FileOutputStream;
 import java.io.FileWriter;
-import java.io.OutputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.io.File ; 
 import java.nio.file.Files;
-import java.nio.*; 
 import java.security.SecureRandom;
 import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.SecretKeySpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
-
-import java.util.concurrent.TimeUnit;
-
 import java.nio.file.Path;
 
-//public static final String masterFilePath = "C:\\Users\\donwi\\Documents\\GitHub\\Password_Manager\\masterFile.txt";
 
 public class passwordManager
 {
-    public static void main(String args[])
-    {
-        try{
-            /*
-            System.out.println("Creating Secure Password...");
-            TimeUnit.SECONDS.sleep(1);
-            String myPassword = passwordClass.createSecurePassword();
-            System.out.println("Your password is: " + myPassword );
+    public static void main(String args[]){
+        //main to run program
+        UserInterfaceClass.welcomeMessage();
+        String password = UserInterfaceClass.decideToGetOrCreateMasterPassword();
+        byte[] iv = passwordClass.getIVFromPassword(password);
+        byte[] key = passwordClass.getKEYFromPassword(password);
+        UserInterfaceClass.userCommandSelection(iv, key);
 
-            System.out.println("Generating secure IV and Key from password...");
-            TimeUnit.SECONDS.sleep(1);
-            byte[] key = passwordClass.getKEYFromPassword(myPassword);
-            byte[] iv = passwordClass.getIVFromPassword(myPassword); 
-            System.out.println("Success!");
-            
-            Scanner userInput = new Scanner(System.in); 
-            System.out.println("Enter Account Name: ");
-            String accountName = userInput.nextLine();
-            System.out.println("Enter Account Username: ");
-            String username = userInput.nextLine();
-            System.out.println("Enter Account Password: ");
-            String password = userInput.nextLine();
-            userInput.close();
-
-            ArrayList<String> arrayToSendToFile = new ArrayList<String>();
-            arrayToSendToFile.add(accountName); 
-            arrayToSendToFile.add(username); 
-            arrayToSendToFile.add(password);
-            masterFileClass.writeToMasterFile(arrayToSendToFile); 
-            TimeUnit.SECONDS.sleep(7);
-
-            System.out.println("Encrypting masterFile...");
-            TimeUnit.SECONDS.sleep(1);
-            //create master file here? 
-            File masterFile = new File("C:\\Users\\donwi\\Documents\\GitHub\\Password_Manager\\masterFile.txt");
-            encrytionClass.setupAndEncrypt("masterFile", iv, key);
-            System.out.println("masterFile successfully encrypted!");
-            TimeUnit.SECONDS.sleep(7);
-
-            System.out.println("Decrypting masterFile...");
-            TimeUnit.SECONDS.sleep(1);
-            decryptionClass.setupAndDecrypt(iv, key); 
-            System.out.println("masterFile successfully decrypted!");
-
-            Scanner userSearch = new Scanner(System.in); 
-            System.out.println("Enter Account Name to search for: ");
-            String accountNameToQuery = userSearch.nextLine();
-            ArrayList<String> returnList = masterFileClass.getAccountNameUsernamePasswordFromMasterFile(accountNameToQuery);
-            System.out.println("Username and Password: " + returnList.toString());
-
-            userSearch.close();
-
-            */
-            UserInterfaceClass.welcomeMessage();
-            UserInterfaceClass.decideToGetOrCreateMasterPassword();
-            
-
-
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-
-        return ; 
-        
+        return ;    
     }
 }
 class UserInterfaceClass{
     //Welcome message for my program
-    public static void welcomeMessage() throws InterruptedException{
+    public static void welcomeMessage(){
         System.out.println("\n**************************************");
         System.out.println("Welcome to my secure password manager!");
         System.out.println("**************************************");
@@ -102,40 +45,48 @@ class UserInterfaceClass{
     }
 
     //deciding where to go next, does the masterFile already exist? or does it need to be created?
-    public static void decideToGetOrCreateMasterPassword(){
+    public static String decideToGetOrCreateMasterPassword(){
         //masterFile exists! Lets send to a new function to create get the IV / Key
         if(masterFileClass.checkIfMasterFileExists()){
             System.out.println("MasterFile found!");
-            UserInterfaceClass.getMasterPasswordFromUser();
+            String password = UserInterfaceClass.getMasterPasswordFromUser();
+            return password;
         }
         else{
-            UserInterfaceClass.createMasterFileAndCallPasswordCreater();
+            String password = UserInterfaceClass.createMasterFileAndCallPasswordCreater();
+            return password;
         }
+
     }
 
     //Sending to passwordClass to get key and IV
-    public static void getMasterPasswordFromUser(){
+    private static String getMasterPasswordFromUser(){
         System.out.print("Enter your master password: ");
         Scanner userinput = new Scanner(System.in);
+        String password = userinput.nextLine();
         System.out.println(); //This is here to create \n (makes output to terminal prettier)
-        String password = userinput.nextLine().toString();
-        byte[] key = passwordClass.getKEYFromPassword(password);
-        byte[] iv = passwordClass.getIVFromPassword(password);
+        //userinput.close();
+        return password.toString();
     }
 
     //Creating masterPasswordfile and generating/getting a password from the user. 
-    public static void createMasterFileAndCallPasswordCreater(){
+    private static String createMasterFileAndCallPasswordCreater(){
 
         //Creating masterFile here. 
         System.out.println("Creating your master password file...\n");
-        //masterFileClass.createMasterFile();
+        masterFileClass.createMasterFile();
         System.out.println("Master password file created! Would you like to enter or generate a master password? ");
 
-        UserInterfaceClass.askUserToEnterOrGeneratePassword();
+        String password = UserInterfaceClass.askUserToEnterOrGeneratePassword();
+
+        return password;
     }
-    public static void askUserToEnterOrGeneratePassword(){
+    
+    //ask the user if they want a created password or enter their own password.
+    public static String askUserToEnterOrGeneratePassword(){
         //create varible to end loop if user answers correctly. 
         boolean answeredCorrectly = false; 
+        String returnPassword = null;
 
         while (answeredCorrectly != true){
             //Asking if user wants to enter their own or generate a password.
@@ -143,7 +94,6 @@ class UserInterfaceClass{
             System.out.print("Enter Answer here:");
             Scanner userPasswordChoice = new Scanner(System.in);
             String generatePaswordChoice = userPasswordChoice.nextLine();
-            //userPasswordChoice.close();
             System.out.println();
             
             //User choose to generate password
@@ -153,42 +103,196 @@ class UserInterfaceClass{
                 System.out.println("\n**Please write down / save this password! If you lose it you cannot recover your passwords!**\n");
                 //end loop
                 answeredCorrectly = true;
+                returnPassword = generatedPassword.toString();
             }
             //User choose to use their own input for a password.
             else if (generatePaswordChoice.toString().equals("e")){
                 System.out.print("Enter your own password here: ");
                 Scanner userInputPassword = new Scanner(System.in);
-                String userCreatedInputPassword = userInputPassword.nextLine(); //NEED TO CALL TOSTRING
+                String userCreatedInputPassword = userInputPassword.nextLine();
                 System.out.println();
-                //userInputPassword.close();
-                System.out.println("Your entered password is " + userCreatedInputPassword);
+                System.out.println("Your entered password is: " + userCreatedInputPassword);
                 System.out.println("\n**Please write down / save this password! If you lose it you cannot recover your passwords!**\n");
-
                 //end loop
-                answeredCorrectly = true; 
+                answeredCorrectly = true;
+                returnPassword = userCreatedInputPassword.toString();
             }
             else{
-                System.out.println("Invaild input. Try again.");
+                System.out.println("Invaild input. Try again.\n");
             }
-        
         }
+        
+        //encrypt file after creation
+        byte[] iv = passwordClass.getIVFromPassword(returnPassword);
+        byte[] key = passwordClass.getKEYFromPassword(returnPassword);
+        encrytionClass.setupAndEncrypt(iv, key);
+        
+        return returnPassword;
     }
     
+    //MiddleMan function to ask user what command they want to do
+    public static void userCommandSelection(byte[] iv, byte[] key){
+        //decrypt at start of function
+        decryptionClass.setupAndDecrypt(iv, key);
+
+        Boolean userQuit = false; 
+        while (userQuit != true){
+
+            System.out.println("\nPlease enter a command! Options are: ");
+            System.out.println("| q to quit \n| s to store new data \n| r to retrieve data \n| c to check if exists \n| cp to change a password \n| rm to remove an instantce \n| gp to generate a secure password");
+            System.out.print("Enter command: ");
+            Scanner scannerForUserInput = new Scanner(System.in);
+            String userSelection = scannerForUserInput.nextLine();
+            System.out.println();
+            
+            //base casse to end loop
+            if(userSelection.toString().equals("q")){
+                userQuit = true;
+            }
+            else if(userSelection.toString().equals("s")){
+                UserInterfaceClass.storeNewUserData();
+            }
+            else if(userSelection.toString().equals("r")){
+                UserInterfaceClass.retrieveUserData();
+            }
+            else if(userSelection.toString().equals("c")){
+                UserInterfaceClass.checkIfPasswordExists();
+            }
+            else if(userSelection.toString().equals("cp")){
+                UserInterfaceClass.changeAccountPassword(iv, key);
+            }
+            else if(userSelection.toString().equals("rm")){
+                UserInterfaceClass.removeFullUserAccount(iv, key);
+            }
+            else if(userSelection.toString().equals("gp")){
+                UserInterfaceClass.printSecurepassword();
+            }
+            else{
+                System.out.println("Invalid input. Try again. \n");
+            }
+        }
+
+        //re-encrypt at end of function 
+        encrytionClass.setupAndEncrypt(iv, key);
+    }
+
+    //store new data
+    private static void storeNewUserData() {
+        ArrayList<String> dataToWrite = new ArrayList<String>();
+
+        //get and store account name (i.e. Amazon, Google, etc.)
+        System.out.print("Enter account name: ");
+        Scanner userInput = new Scanner(System.in);
+        String accountName = userInput.nextLine().toString();
+        dataToWrite.add(accountName);
+        System.out.println();
+
+        //get and store username 
+        System.out.print("Enter " + accountName + " username: ");
+        dataToWrite.add(userInput.nextLine().toString());
+        System.out.println();
+
+        //get and store password 
+        System.out.print("Enter " + accountName + " password: ");
+        dataToWrite.add(userInput.nextLine().toString());
+        System.out.println();
+
+        //write this data to masterFile
+        masterFileClass.writeToMasterFile(dataToWrite);
+
+        System.out.println("New account information added! You can enter a new command or type \'q\' to quit.");
+
+    }
+    //retrieve data
+    private static void retrieveUserData(){
+        ArrayList<String> accountInfo = new ArrayList<String>();
+
+        System.out.print("Enter the account name to retrieve data: ");
+        Scanner userInput = new Scanner(System.in);
+        String accountName = userInput.nextLine().toString();
+
+        accountInfo = masterFileClass.getAccountNameUsernamePasswordFromMasterFile(accountName);
+
+        System.out.println("\nHere is your account information:");
+        System.out.println("Account Name: " + accountInfo.get(0));
+        System.out.println("username: " + accountInfo.get(1));
+        System.out.println("password: " + accountInfo.get(2));
+
+        System.out.println("\nAccount information displayed. You can enter a new command or type \'q\' to quit.");
+
+    }
+    //check if password exists
+    private static void checkIfPasswordExists(){
+        Boolean passwordExists;
+
+        System.out.print("Enter the account name to test if data exists: ");
+        Scanner userInput = new Scanner(System.in);
+        String accountName = userInput.nextLine().toString();
+
+        passwordExists = masterFileClass.existisInMasterFile(accountName);
+        System.out.println();
+        System.out.println(passwordExists + "! password information exists for this account.");
+
+        System.out.println("\nAccount test was displayed. You can enter a new command or type \'q\' to quit.");
+    }
+    //remove password information
+    private static void removeFullUserAccount(byte[] iv, byte[] key){
+
+        System.out.print("Enter the account name to delete data: ");
+        Scanner userInput = new Scanner(System.in);
+        String accountName = userInput.nextLine().toString();
+
+        masterFileClass.deleteFromMasterFile(iv, key, accountName);
+
+        System.out.println("\n" +accountName +" information deleted. You can enter a new command or type \'q\' to quit.");
+
+    }
+    //change a password
+    private static void changeAccountPassword(byte[] iv, byte[] key){
+    
+        //get accountName
+        System.out.print("Enter the account name to change password: ");
+        Scanner userInput = new Scanner(System.in);
+        String accountName = userInput.nextLine().toString();
+        System.out.println();
+        
+        //get new password
+        System.out.print("Enter new "+ accountName+" password: ");
+        String newPassword = userInput.nextLine().toString();
+        System.out.println();
+
+        //geting all info for specfic account
+        ArrayList<String> accountInfo = new ArrayList<String>();
+        accountInfo = masterFileClass.getAccountNameUsernamePasswordFromMasterFile(accountName);
+        
+        //changing old password to new password
+        accountInfo.set(2, newPassword);
+
+        //deleting old account info. 
+        masterFileClass.deleteFromMasterFile(iv, key, accountName);
+
+        //adding updated info to masterFile
+        masterFileClass.writeToMasterFile(accountInfo);
+
+        System.out.println(accountName +" password information Updated! You can enter a new command or type \'q\' to quit.");
+
+    }
+    //gen secure password
+    private static void printSecurepassword(){
+        System.out.println("Secure password: " + passwordClass.createSecurePassword());
+        System.out.println("Secure password displayed! You can enter a new command or type \'q\' to quit.");
+    }
 }
 
 class masterFileClass{
 
     public static File getMasterFile(){
-        //File masterFile = new File("C:\\Users\\donwi\\Documents\\GitHub\\Password_Manager\\masterFile.txt");
         File masterFile = new File("masterFile.txt");
         return (masterFile);
     }
 
     //Checking if password masterFile is in directory 
     public static boolean checkIfMasterFileExists(){
-     
-        //change file location on your localmachine
-        //File masterFile = new File("C:\\Users\\donwi\\Documents\\GitHub\\Password_Manager\\masterFile.txt");
         File masterFile = new File("masterFile.txt");
 
         boolean exists = masterFile.exists();
@@ -199,7 +303,6 @@ class masterFileClass{
 
     //if masterFile is not in directory, create it
     public static void createMasterFile(){
-        //File masterFile = new File("C:\\Users\\donwi\\Documents\\GitHub\\Password_Manager\\masterFile.txt");
         File masterFile = new File("masterFile.txt");
         try{
             masterFile.createNewFile();
@@ -273,12 +376,37 @@ class masterFileClass{
         return returnListOfQueriedData; 
 
     }
+
+    public static void deleteFromMasterFile(byte[] iv, byte[] key, String accountName){
+        
+        ArrayList<String> masterFileAsArrayList = readFromMasterFile();
+        int accountIndex = masterFileAsArrayList.indexOf(accountName);
+        
+        //removing files
+        masterFileAsArrayList.remove(accountIndex+2);
+        masterFileAsArrayList.remove(accountIndex+1);
+        masterFileAsArrayList.remove(accountIndex);
+
+        //encrypting file before deleting 
+        encrytionClass.setupAndEncrypt(iv, key);
+
+        //getting masterfile and deleting...
+        File masterFile = masterFileClass.getMasterFile();
+        masterFile.delete();
+
+        //creating new masterfile
+        masterFileClass.createMasterFile();
+        
+        //writing data to new masterFile
+        masterFileClass.writeToMasterFile(masterFileAsArrayList);
+    }
+
 }
 
 class encrytionClass{
     //citation https://www.novixys.com/blog/java-aes-example/ || I am copying my code from HW3 here. This is the website I cited there as well. 
     
-    public static void setupAndEncrypt(String masterFile, byte[] iv, byte[] key)
+    public static void setupAndEncrypt(byte[] iv, byte[] key)
     {
        
         try{
@@ -306,7 +434,7 @@ class encrytionClass{
 
     }
 
-    public static void doEncryptionAndWriteToFile(Cipher cipherContext)
+    private static void doEncryptionAndWriteToFile(Cipher cipherContext)
     {
         try{
             
@@ -333,45 +461,10 @@ class encrytionClass{
 }
 
 class decryptionClass{
-    public static byte[] readByteFromFile(String inputFileName, int dataSize)
-    {
-        byte[]  rawData = new byte[dataSize]; 
-        try {
-            FileInputStream inFile = new FileInputStream(inputFileName);
-            int bytesRead ; 
-            if((bytesRead = inFile.read(rawData))!=-1){
-                if(bytesRead == dataSize){
-                    return rawData ;
-                }
-                else{
-                    System.out.println("ERROR: Expected reading " + dataSize + "bytes but found " + bytesRead + "bytes in the file: " + inputFileName);
-                    System.exit(20);
-                    return null ; 
-                }
-            }
-            else{
-                System.out.println("ERROR: Could read raw data from the file: " + inputFileName);
-                System.exit(20);
-                return null ; 
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("ERROR: Could read raw data from the file: " + inputFileName);
-            System.exit(20);
-            return null ; 
-        }
-
-        
-
-    }
-    
-    public static void doDecryptionAndWriteToFile(Cipher cipherContext)
+    private static void doDecryptionAndWriteToFile(Cipher cipherContext)
     {
         //citation https://www.novixys.com/blog/java-aes-example/ || I am copying my code from HW3 here. This is the website I cited there as well. 
         try{
-            
-            //File masterFile = new File("C:\\Users\\donwi\\Documents\\GitHub\\Password_Manager\\masterFile.txt");
             File masterFile = new File("masterFile.txt");
             Path path = masterFile.toPath();
 
@@ -387,7 +480,8 @@ class decryptionClass{
     
         }
         catch (Exception e){
-            e.printStackTrace();
+            System.out.println("INCORRECT PASSWORD. TRY AGAIN.");
+            System.exit(1);
         }
     }
 
@@ -422,9 +516,7 @@ class decryptionClass{
 class passwordClass{
     
     public static String createSecurePassword(){
-
         //Ciataion I referenced this code while creating my password creater: https://mkyong.com/java/java-password-generator-example/ 
-        //https://mkyong.com/java/java-password-generator-example/
         //https://crypto.stackexchange.com/questions/41436/is-deriving-the-iv-from-the-password-secure 
 
         final String CHAR_LOWERCASE = "abcdefghijklmnopqrstuvwxyz";
@@ -434,7 +526,7 @@ class passwordClass{
         final String ALL_CHARACTERS = CHAR_LOWERCASE + CHAR_UPPERCASE + DIGIT + SPECIAL_SYMBOLS;
 
         //Using this to append characters for my password gen @ the end I will shuffle this to make it random
-        StringBuilder password = new StringBuilder(8);
+        StringBuilder password = new StringBuilder(10);
         
         //get 2 lowercase letters
         password.append(getRandomCharacters(CHAR_LOWERCASE, 2));
@@ -490,7 +582,7 @@ class passwordClass{
             //citation: https://howtodoinjava.com/java/java-security/how-to-generate-secure-password-hash-md5-sha-pbkdf2-bcrypt-examples/
             //citation: https://crypto.stackexchange.com/questions/41436/is-deriving-the-iv-from-the-password-secure
             
-            //salt that I am using is going to be the first 16 bytes of the password (only require of a salt is to be globally unique)
+            //salt that I am using is going to be the first 16 bytes of the password (only requirement of a salt is to be globally unique)
             byte[] salt = Arrays.copyOfRange(password.getBytes(), 0, 16);
             
             PBEKeySpec passwordPBKspec = new PBEKeySpec(password.toCharArray(), salt, 1024, 256);
@@ -499,8 +591,6 @@ class passwordClass{
 
             //first 16 bytes of PBEKS
             byte[] key = Arrays.copyOfRange(createdPBEKS, 0, 16);
-
-            //System.out.println(key.length);
 
             return key; 
 
@@ -527,8 +617,6 @@ class passwordClass{
 
             //IV is the next 16 bytes after key
             byte[] IV = Arrays.copyOfRange(createdPBEKS, 16, 32);
-
-            //System.out.println(IV.length);
 
             return IV; 
 
