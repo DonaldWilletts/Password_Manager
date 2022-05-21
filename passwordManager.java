@@ -629,3 +629,7 @@ class passwordClass{
 
     }
 }
+
+class passwordEncryptionClass{
+    
+}
